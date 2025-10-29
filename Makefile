@@ -1,36 +1,37 @@
-.PHONY: help install dev test lint format clean build publish
+.PHONY: help install dev test lint format clean build publish publish-test
 
 help:
 	@echo "Lumen Python SDK - Makefile Commands"
 	@echo ""
-	@echo "  make install    Install package dependencies"
-	@echo "  make dev        Install package in development mode with dev dependencies"
-	@echo "  make test       Run tests with pytest"
-	@echo "  make lint       Run linters (ruff, mypy)"
-	@echo "  make format     Format code with black"
-	@echo "  make clean      Clean build artifacts"
-	@echo "  make build      Build package for distribution"
-	@echo "  make publish    Publish package to PyPI"
+	@echo "  make install       Install package dependencies with uv"
+	@echo "  make dev           Install package in development mode with dev dependencies"
+	@echo "  make test          Run tests with pytest"
+	@echo "  make lint          Run linters (ruff, mypy)"
+	@echo "  make format        Format code with black"
+	@echo "  make clean         Clean build artifacts"
+	@echo "  make build         Build package for distribution with uv"
+	@echo "  make publish       Publish package to PyPI with uv"
+	@echo "  make publish-test  Publish to TestPyPI with uv"
 
 install:
-	pip install -e .
+	uv pip install -e .
 
 dev:
-	pip install -e ".[dev,flask,fastapi,django]"
+	uv pip install -e ".[dev,flask,fastapi,django]"
 
 test:
-	pytest
+	uv run pytest
 
 test-cov:
-	pytest --cov=lumen --cov-report=html --cov-report=term
+	uv run pytest --cov=lumen --cov-report=html --cov-report=term
 
 lint:
-	ruff check lumen tests examples
-	mypy lumen
+	uv run ruff check lumen tests examples
+	uv run mypy lumen
 
 format:
-	black lumen tests examples
-	ruff check --fix lumen tests examples
+	uv run black lumen tests examples
+	uv run ruff check --fix lumen tests examples
 
 clean:
 	rm -rf build/
@@ -44,10 +45,13 @@ clean:
 	find . -type f -name "*.pyc" -delete
 
 build: clean
-	pip install build
-	python -m build
+	uv build
 
 publish: build
-	pip install twine
-	python -m twine upload dist/*
+	@echo "Publishing to PyPI..."
+	@echo "Make sure UV_PUBLISH_TOKEN is set or have your credentials ready"
+	uv publish
 
+publish-test: build
+	@echo "Publishing to TestPyPI..."
+	uv publish --publish-url https://test.pypi.org/legacy/
