@@ -95,7 +95,9 @@ def lumen_django_handler(
                 return JsonResponse({"error": "Unsupported path"}, status=404)
 
             API_URL = api_url or os.environ.get("LUMEN_API_URL") or "https://api.getlumen.dev"
-            full_path = f"{API_URL.rstrip('/v1')}/v1/{lumen_backend_path}"
+            # Fix: use removesuffix instead of rstrip to avoid stripping characters from 'dev'
+            base_url = API_URL.removesuffix('/v1') if API_URL.endswith('/v1') else API_URL.rstrip('/')
+            full_path = f"{base_url}/v1/{lumen_backend_path}"
 
             url_params: Dict[str, str] = {}
             for key, value in request.GET.items():
